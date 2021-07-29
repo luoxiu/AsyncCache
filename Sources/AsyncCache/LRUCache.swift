@@ -1,6 +1,6 @@
 import Dispatch
 
-public actor LRUCache<Key, Value> where Key: Hashable {
+public struct LRUCache<Key, Value> where Key: Hashable {
     
     // MARK: Config
     
@@ -28,7 +28,7 @@ public actor LRUCache<Key, Value> where Key: Hashable {
     }
     
     // MARK: Operations
-    public func set(_ value: Value, for key: Key, cost: Int) {
+    public mutating func set(_ value: Value, for key: Key, cost: Int) {
         if let node = dict[key] {
             
             node._withUnsafeGuaranteedRef { n in
@@ -55,7 +55,7 @@ public actor LRUCache<Key, Value> where Key: Hashable {
         trimToCostLimit()
     }
     
-    public func value(for key: Key) -> Value? {
+    public mutating func value(for key: Key) -> Value? {
         guard let node = dict[key] else {
             return nil
         }
@@ -65,7 +65,7 @@ public actor LRUCache<Key, Value> where Key: Hashable {
         return node.takeUnretainedValue().value
     }
 
-    public func removeValue(for key: Key) -> Value? {
+    public mutating func removeValue(for key: Key) -> Value? {
         guard let node = dict.removeValue(forKey: key) else {
             return nil
         }
@@ -77,7 +77,7 @@ public actor LRUCache<Key, Value> where Key: Hashable {
         return node.takeUnretainedValue().value
     }
     
-    public func removeAll() {
+    public mutating func removeAll() {
         totalCost = 0
         
         dict.removeAll()
@@ -87,7 +87,7 @@ public actor LRUCache<Key, Value> where Key: Hashable {
 
 extension LRUCache {
     
-    public func trimToCostLimit() {
+    public mutating func trimToCostLimit() {
         while totalCost > costLimit {
             
             if let first = linkedList.removeFirst() {
@@ -100,7 +100,7 @@ extension LRUCache {
         }
     }
     
-    public func trimToMaxAge() {
+    public mutating func trimToMaxAge() {
         
         while let first = linkedList.first {
             
