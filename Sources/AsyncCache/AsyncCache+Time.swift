@@ -16,7 +16,7 @@ extension AsyncCache {
 
         let time: DispatchTime
         
-        public init(_ time: DispatchTime) {
+        init(_ time: DispatchTime) {
             self.time = time
         }
 
@@ -29,47 +29,50 @@ extension AsyncCache {
 extension AsyncCache.Time {
     
     public struct Span {
-        let nanoseconds: UInt64
+        
+        let interval: DispatchTimeInterval
+        
+        init(_ interval: DispatchTimeInterval) {
+            self.interval = interval
+        }
+        
+        public static var forever: AsyncCache.Time.Span {
+            .init(.never)
+        }
     }
 }
 
 extension AsyncCache.Time.Span {
 
     public static func nanoseconds(_ ns: Int) -> AsyncCache.Time.Span {
-        .init(nanoseconds: UInt64(ns))
+        .init(.nanoseconds(ns))
     }
 
     public static func microseconds(_ us: Int) -> AsyncCache.Time.Span {
-        .init(nanoseconds: clampedMultiply(UInt64(us), 1000))
+        .init(.microseconds(us))
     }
 
     public static func milliseconds(_ ms: Int) -> AsyncCache.Time.Span {
-        .init(nanoseconds: clampedMultiply(UInt64(ms), 1000 * 1000))
+        .init(.milliseconds(ms))
     }
 
     public static func seconds(_ s: Int) -> AsyncCache.Time.Span {
-        .init(nanoseconds: clampedMultiply(UInt64(s), 1000 * 1000 * 1000))
+        .init(.seconds(s))
     }
     
     public static func minutes(_ m: Int) -> AsyncCache.Time.Span {
-        .init(nanoseconds: clampedMultiply(UInt64(m), 1000 * 1000 * 1000 * 60))
+        .init(.seconds(m * 60))
     }
     
     public static func hours(_ h: Int) -> AsyncCache.Time.Span {
-        .init(nanoseconds: clampedMultiply(UInt64(h), 1000 * 1000 * 1000 * 60 * 60))
+        .init(.seconds(h * 60 * 60))
     }
     
     public static func days(_ d: Int) -> AsyncCache.Time.Span {
-        .init(nanoseconds: clampedMultiply(UInt64(d), 1000 * 1000 * 1000 * 60 * 60 * 24))
+        .init(.seconds(d * 60 * 60 * 24))
     }
     
     public static func weeks(_ w: Int) -> AsyncCache.Time.Span {
-        .init(nanoseconds: clampedMultiply(UInt64(w), 1000 * 1000 * 1000 * 60 * 60 * 24 * 7))
-    }
-}
-
-extension AsyncCache.Time.Span {
-    public static var forever: AsyncCache.Time.Span {
-        .init(nanoseconds: .max)
+        .init(.seconds(w * 60 * 60 * 24 * 7))
     }
 }

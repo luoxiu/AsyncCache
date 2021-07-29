@@ -107,7 +107,7 @@ public actor AsyncCache<Key, Value> where Key: Hashable {
             
             let removed = first._withUnsafeGuaranteedRef { n -> Bool in
                 
-                if n.time.time.advanced(by: .nanoseconds(Int(maxAge.nanoseconds))) < .now() {
+                if n.time.time.advanced(by: maxAge.interval) < .now() {
                     
                     dict[n.key] = nil
                     linkedList.removeFirst()
