@@ -1,6 +1,6 @@
 import Dispatch
 
-public actor AsyncCache<Key, Value> where Key: Hashable {
+public actor LRUCache<Key, Value> where Key: Hashable {
     
     // MARK: Config
     
@@ -64,11 +64,7 @@ public actor AsyncCache<Key, Value> where Key: Hashable {
         
         return node.takeUnretainedValue().value
     }
-    
-    public func contains(_ key: Key) -> Bool {
-        dict.keys.contains(key)
-    }
-    
+
     public func removeValue(for key: Key) -> Value? {
         guard let node = dict.removeValue(forKey: key) else {
             return nil
@@ -87,6 +83,9 @@ public actor AsyncCache<Key, Value> where Key: Hashable {
         dict.removeAll()
         linkedList.removeAll()
     }
+}
+
+extension LRUCache {
     
     public func trimToCostLimit() {
         while totalCost > costLimit {
@@ -107,18 +106,28 @@ public actor AsyncCache<Key, Value> where Key: Hashable {
             
             let removed = first._withUnsafeGuaranteedRef { n -> Bool in
                 
-                if n.time.time.advanced(by: maxAge.interval) < .now() {
-                    
-                    dict[n.key] = nil
-                    linkedList.removeFirst()
-                    
+                guard n.time.time.advanced(by: maxAge.interval) > .now() else {
                     return false
                 }
+                
+                dict[n.key] = nil
+                linkedList.removeFirst()
                 
                 return true
             }
             
             guard removed else { break }
         }
+    }
+}
+
+extension LRUCache {
+    
+    public var keys: AnyCollection<Key> {
+        .init(dict.keys)
+    }
+    
+    public func contains(_ key: Key) -> Bool {
+        dict.keys.contains(key)
     }
 }

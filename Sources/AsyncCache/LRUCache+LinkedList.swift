@@ -1,4 +1,4 @@
-extension AsyncCache {
+extension LRUCache {
     
     final class LinkedList {
         
@@ -123,7 +123,7 @@ extension AsyncCache {
 }
 
 
-extension AsyncCache.LinkedList {
+extension LRUCache.LinkedList {
     
     final class Node {
         var previous: Unmanaged<Node>?
@@ -134,9 +134,9 @@ extension AsyncCache.LinkedList {
         
         var cost: Int
         
-        var time: AsyncCache.Time
+        var time: LRUCache.Time
         
-        init(key: Key, value: Value, cost: Int, time: AsyncCache.Time) {
+        init(key: Key, value: Value, cost: Int, time: LRUCache.Time) {
             self.key = key
             self.value = value
             

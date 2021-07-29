@@ -10,7 +10,7 @@ private func clampedMultiply(_ x: UInt64, _ y: UInt64) -> UInt64 {
     return partialValue
 }
 
-extension AsyncCache {
+extension LRUCache {
     
     public struct Time {
 
@@ -26,7 +26,7 @@ extension AsyncCache {
     }
 }
 
-extension AsyncCache.Time {
+extension LRUCache.Time {
     
     public struct Span {
         
@@ -36,43 +36,43 @@ extension AsyncCache.Time {
             self.interval = interval
         }
         
-        public static var forever: AsyncCache.Time.Span {
+        public static var forever: LRUCache.Time.Span {
             .init(.never)
         }
     }
 }
 
-extension AsyncCache.Time.Span {
+extension LRUCache.Time.Span {
 
-    public static func nanoseconds(_ ns: Int) -> AsyncCache.Time.Span {
+    public static func nanoseconds(_ ns: Int) -> LRUCache.Time.Span {
         .init(.nanoseconds(ns))
     }
 
-    public static func microseconds(_ us: Int) -> AsyncCache.Time.Span {
+    public static func microseconds(_ us: Int) -> LRUCache.Time.Span {
         .init(.microseconds(us))
     }
 
-    public static func milliseconds(_ ms: Int) -> AsyncCache.Time.Span {
+    public static func milliseconds(_ ms: Int) -> LRUCache.Time.Span {
         .init(.milliseconds(ms))
     }
 
-    public static func seconds(_ s: Int) -> AsyncCache.Time.Span {
+    public static func seconds(_ s: Int) -> LRUCache.Time.Span {
         .init(.seconds(s))
     }
     
-    public static func minutes(_ m: Int) -> AsyncCache.Time.Span {
+    public static func minutes(_ m: Int) -> LRUCache.Time.Span {
         .init(.seconds(m * 60))
     }
     
-    public static func hours(_ h: Int) -> AsyncCache.Time.Span {
+    public static func hours(_ h: Int) -> LRUCache.Time.Span {
         .init(.seconds(h * 60 * 60))
     }
     
-    public static func days(_ d: Int) -> AsyncCache.Time.Span {
+    public static func days(_ d: Int) -> LRUCache.Time.Span {
         .init(.seconds(d * 60 * 60 * 24))
     }
     
-    public static func weeks(_ w: Int) -> AsyncCache.Time.Span {
+    public static func weeks(_ w: Int) -> LRUCache.Time.Span {
         .init(.seconds(w * 60 * 60 * 24 * 7))
     }
 }
