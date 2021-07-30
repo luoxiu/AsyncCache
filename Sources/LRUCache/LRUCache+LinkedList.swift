@@ -11,7 +11,7 @@ extension LRUCache {
         func append(_ node: Unmanaged<Node>) {
             if let last = last {
                 last._withUnsafeGuaranteedRef {
-                    $0.previous = node
+                    $0.next = node
                 }
                 
                 node._withUnsafeGuaranteedRef {
@@ -96,7 +96,7 @@ extension LRUCache {
         
         /// Assume the first exists.
         @discardableResult
-        func removeFirst() -> Unmanaged<Node>? {
+        func removeFirst() -> Unmanaged<Node> {
             if first!.toOpaque() == last!.toOpaque() {
                 defer {
                     first = nil
@@ -105,14 +105,16 @@ extension LRUCache {
                 return first!
             }
             
-            first!._withUnsafeGuaranteedRef {
-                $0.next!._withUnsafeGuaranteedRef {
-                    $0.previous = nil
+            defer {
+                first!._withUnsafeGuaranteedRef {
+                    $0.next!._withUnsafeGuaranteedRef {
+                        $0.previous = nil
+                    }
+                    first = $0.next
                 }
-                first = $0.next
             }
             
-            return nil
+            return first!
         }
         
         func removeAll() {
@@ -126,6 +128,7 @@ extension LRUCache {
 extension LRUCache.LinkedList {
     
     final class Node {
+        
         var previous: Unmanaged<Node>?
         var next: Unmanaged<Node>?
         
@@ -134,9 +137,9 @@ extension LRUCache.LinkedList {
         
         var cost: Int
         
-        var time: LRUCache.Time
+        var time: Time
         
-        init(key: Key, value: Value, cost: Int, time: LRUCache.Time) {
+        init(key: Key, value: Value, cost: Int, time: Time) {
             self.key = key
             self.value = value
             

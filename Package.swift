@@ -7,10 +7,10 @@ let package = Package(
     name: "AsyncCache",
     platforms: [.macOS(.v12), .iOS(.v15), .watchOS(.v8), .tvOS(.v15)],
     products: [
-        .library(name: "AsyncCache", targets: ["AsyncCache"]),
+        .library(name: "LRUCache", targets: ["LRUCache"]),
     ],
     targets: [
-        .target(name: "AsyncCache", dependencies: []),
-        .testTarget(name: "AsyncCacheTests", dependencies: ["AsyncCache"]),
+        .target(name: "LRUCache", dependencies: []),
+        .testTarget(name: "LRUCacheTests", dependencies: ["LRUCache"]),
     ]
 )
