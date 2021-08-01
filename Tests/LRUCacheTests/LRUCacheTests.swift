@@ -27,8 +27,8 @@ final class AsyncCacheTests: XCTestCase {
         
         XCTAssertEqual(cache.count, count)
         
-        XCTAssertEqual(cache.debugKeys, data.map { $0.0 })
-        XCTAssertEqual(cache.debugValues, data.map { $0.1 })
+        XCTAssertEqual(cache.orderedKeys, data.map { $0.0 })
+        XCTAssertEqual(cache.orderedValues, data.map { $0.1 })
         
         let values = data.compactMap {
             cache.value(forKey: $0.0)
@@ -48,15 +48,15 @@ final class AsyncCacheTests: XCTestCase {
         
         XCTAssertEqual(cache.count, 5)
         
-        XCTAssertEqual(cache.debugKeys, data.suffix(5).map { $0.0 })
-        XCTAssertEqual(cache.debugValues, data.suffix(5).map { $0.1 })
+        XCTAssertEqual(cache.orderedKeys, data.suffix(5).map { $0.0 })
+        XCTAssertEqual(cache.orderedValues, data.suffix(5).map { $0.1 })
         
         cache.costLimit = 1
         
         XCTAssertEqual(cache.count, 1)
         
-        XCTAssertEqual(cache.debugKeys, data.suffix(1).map { $0.0 })
-        XCTAssertEqual(cache.debugValues, data.suffix(1).map { $0.1 })
+        XCTAssertEqual(cache.orderedKeys, data.suffix(1).map { $0.0 })
+        XCTAssertEqual(cache.orderedValues, data.suffix(1).map { $0.1 })
     }
     
     func testMaxAge() {
