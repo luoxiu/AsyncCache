@@ -3,7 +3,7 @@ import Dispatch
 public struct LRUCache<Key, Value> where Key: Hashable {
     
     // MARK: Config
-    
+
     public var costLimit: Int {
         didSet {
             precondition(costLimit >= 0)
@@ -164,50 +164,16 @@ extension LRUCache {
     }
 }
 
+// MARK: Copy
 extension LRUCache {
     
-    /// Ordered by write time.
-    var debugKeys: [Key] {
-        var keys: [Key] = []
-        
-        var node = linkedList.first
-        
-        while let n = node {
-            n._withUnsafeGuaranteedRef {
-                keys.append($0.key)
-                node = $0.next
-            }
-        }
-        
-        return keys
-    }
-    
-    /// Ordered by write time.
-    var debugValues: [Value] {
-        var values: [Value] = []
-        
-        var node = linkedList.first
-        
-        while let n = node {
-            n._withUnsafeGuaranteedRef {
-                values.append($0.value)
-                node = $0.next
-            }
-        }
-        
-        return values
-    }
-}
-
-extension LRUCache {
-    
-    mutating func copyIfNotUniquelyRef() {
+    private mutating func copyIfNotUniquelyRef() {
         if !isKnownUniquelyReferenced(&linkedList) {
             self = copy()
         }
     }
     
-    func copy() -> LRUCache {
+    private func copy() -> LRUCache {
         
         var cache = LRUCache(
             minimumCapacity: dict.capacity,
@@ -232,5 +198,41 @@ extension LRUCache {
         }
         
         return cache
+    }
+}
+
+// MARK: Debug
+extension LRUCache {
+    
+    /// Ordered by write time.
+    var orderedKeys: [Key] {
+        var keys: [Key] = []
+        
+        var node = linkedList.first
+        
+        while let n = node {
+            n._withUnsafeGuaranteedRef {
+                keys.append($0.key)
+                node = $0.next
+            }
+        }
+        
+        return keys
+    }
+    
+    /// Ordered by write time.
+    var orderedValues: [Value] {
+        var values: [Value] = []
+        
+        var node = linkedList.first
+        
+        while let n = node {
+            n._withUnsafeGuaranteedRef {
+                values.append($0.value)
+                node = $0.next
+            }
+        }
+        
+        return values
     }
 }
