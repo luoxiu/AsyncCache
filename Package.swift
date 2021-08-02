@@ -12,5 +12,6 @@ let package = Package(
     targets: [
         .target(name: "LRUCache", dependencies: []),
         .testTarget(name: "LRUCacheTests", dependencies: ["LRUCache"]),
+        .target(name: "DiskLRUCache", dependencies: ["LRUCache"]),
     ]
 )
