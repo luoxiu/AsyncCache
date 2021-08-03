@@ -1,4 +1,5 @@
 import Dispatch
+import CoreFoundation
 
 public struct LRUCache<Key, Value> where Key: Hashable {
     
@@ -11,19 +12,18 @@ public struct LRUCache<Key, Value> where Key: Hashable {
         }
     }
     
-    public var maxAge: Time.Span {
-        didSet {
-            trimToMaxAge()
-        }
-    }
-    
     // MARK: Storage
-    public private(set) var totalCost = 0
+    @usableFromInline
+    var _totalCost = 0
     
-    private var dict: [Key: Unmanaged<LinkedList.Node>]
-    private var linkedList: LinkedList
+    @usableFromInline
+    var _dict: [Key: Unmanaged<LinkedList.Node>]
+    
+    @usableFromInline
+    var _list: LinkedList
     
     // MARK: Init
+    @inlinable
     public init(
         minimumCapacity: Int = 2 ^ 5,
         costLimit: Int = .max,
@@ -32,183 +32,126 @@ public struct LRUCache<Key, Value> where Key: Hashable {
         precondition(costLimit >= 0)
         
         self.costLimit = costLimit
-        self.maxAge = maxAge
         
-        self.dict = .init(minimumCapacity: minimumCapacity)
-        self.linkedList = LinkedList()
+        self._dict = .init(minimumCapacity: minimumCapacity)
+        self._list = LinkedList()
     }
     
     // MARK: Operations
     
-    public mutating func setValue(_ value: Value, forKey key: Key, cost: Int = 1) {
+    @inlinable
+    public mutating func setValue(_ value: __owned Value, forKey key: Key, cost: Int = 1) {
         copyIfNotUniquelyRef()
         
-        if let node = dict[key] {
+        if let node = _dict[key] {
             
             node._withUnsafeGuaranteedRef { n in
-                totalCost -= n.cost
-                totalCost += cost
-                
-                n.time = Time.now
-                
+                _totalCost -= n.cost
+                _totalCost += cost
+
                 n.value = value
                 
-                linkedList.moveToLast(node)
+                _list.moveToLast(node)
             }
         } else {
-            totalCost += cost
+            _totalCost += cost
             
-            let node = LinkedList.Node(key: key, value: value, cost: cost, time: .now)
+            let node = LinkedList.Node(key: key, value: value, cost: cost)
             let unmanaged = Unmanaged<LinkedList.Node>.passRetained(node)
             
-            dict[key] = unmanaged
+            _dict[key] = unmanaged
             
-            linkedList.append(unmanaged)
+            _list.append(unmanaged)
         }
         
         trimToCostLimit()
     }
     
+    @inlinable
     public mutating func value(forKey key: Key) -> Value? {
         copyIfNotUniquelyRef()
         
-        guard let node = dict[key] else {
+        guard let node = _dict[key] else {
             return nil
         }
         
-        linkedList.moveToLast(node)
+        _list.moveToLast(node)
         
         return node.takeUnretainedValue().value
     }
 
+    @inlinable
     public mutating func removeValue(forKey key: Key) -> Value? {
         copyIfNotUniquelyRef()
         
-        guard let node = dict.removeValue(forKey: key) else {
+        guard let node = _dict.removeValue(forKey: key) else {
             return nil
         }
         
-        totalCost -= node.takeUnretainedValue().cost
+        _totalCost -= node.takeUnretainedValue().cost
 
-        linkedList.remove(node)
+        _list.remove(node)
         
         return node.takeUnretainedValue().value
     }
     
+    @inlinable
     public mutating func removeAll(keepingCapacity: Bool = false) {
         copyIfNotUniquelyRef()
         
-        totalCost = 0
+        _totalCost = 0
         
-        dict.removeAll(keepingCapacity: keepingCapacity)
-        linkedList.removeAll()
+        _dict.removeAll(keepingCapacity: keepingCapacity)
+        _list.removeAll()
     }
 }
 
 extension LRUCache {
     
+    @inlinable
     public mutating func trimToCostLimit() {
         var copied = false
         
-        while totalCost > costLimit && count > 0 {
+        while _totalCost > costLimit && count > 0 {
             
             if !copied {
                 copied = true
                 copyIfNotUniquelyRef()
             }
             
-            let first = linkedList.removeFirst()
+            let first = _list.removeFirst()
             
             first._withUnsafeGuaranteedRef {
-                totalCost -= $0.cost
-                dict[$0.key] = nil
+                _totalCost -= $0.cost
+                _dict[$0.key] = nil
             }
-        }
-    }
-    
-    public mutating func trimToMaxAge() {
-        var copied = false
-        
-        while let first = linkedList.first {
-            
-            let removed = first._withUnsafeGuaranteedRef { n -> Bool in
-                
-                guard n.time + maxAge > .now else {
-                    return false
-                }
-                
-                if !copied {
-                    copied = true
-                    copyIfNotUniquelyRef()
-                }
-                
-                dict[n.key] = nil
-                linkedList.removeFirst()
-                
-                return true
-            }
-            
-            guard removed else { break }
         }
     }
 }
 
 extension LRUCache {
     
+    @inlinable
     public func contains(_ key: Key) -> Bool {
-        dict.keys.contains(key)
+        _dict.keys.contains(key)
     }
     
+    @inlinable
     public var count: Int {
-        dict.count
-    }
-}
-
-// MARK: Copy
-extension LRUCache {
-    
-    private mutating func copyIfNotUniquelyRef() {
-        if !isKnownUniquelyReferenced(&linkedList) {
-            self = copy()
-        }
+        _dict.count
     }
     
-    private func copy() -> LRUCache {
-        
-        var cache = LRUCache(
-            minimumCapacity: dict.capacity,
-            costLimit: costLimit,
-            maxAge: maxAge
-        )
-        
-        var node = linkedList.first
-        
-        while let n = node {
-
-            n._withUnsafeGuaranteedRef { ref in
-                
-                cache.setValue(ref.value, forKey: ref.key, cost: ref.cost)
-                
-                cache.linkedList.last!._withUnsafeGuaranteedRef {
-                    $0.time = ref.time
-                }
-                
-                node = ref.next
-            }
-        }
-        
-        return cache
+    @inlinable
+    public var totalCost: Int {
+        _totalCost
     }
-}
-
-// MARK: Debug
-extension LRUCache {
     
     /// Ordered by write time.
-    var orderedKeys: [Key] {
+    @inlinable
+    public var orderedKeys: [Key] {
         var keys: [Key] = []
         
-        var node = linkedList.first
+        var node = _list.first
         
         while let n = node {
             n._withUnsafeGuaranteedRef {
@@ -219,20 +162,46 @@ extension LRUCache {
         
         return keys
     }
+
+    @inlinable
+    public func peekValue(forKey key: Key) -> Value? {
+        _dict[key]?._withUnsafeGuaranteedRef {
+            $0.value
+        }
+    }
+}
+
+// MARK: Copy
+extension LRUCache {
     
-    /// Ordered by write time.
-    var orderedValues: [Value] {
-        var values: [Value] = []
+    @inlinable
+    @inline(__always)
+    mutating func copyIfNotUniquelyRef() {
+        if !isKnownUniquelyReferenced(&_list) {
+            self = copy()
+        }
+    }
+    
+    @inlinable
+    @inline(__always)
+    func copy() -> LRUCache {
         
-        var node = linkedList.first
+        var cache = LRUCache(
+            minimumCapacity: _dict.capacity,
+            costLimit: costLimit
+        )
+        
+        var node = _list.first
         
         while let n = node {
-            n._withUnsafeGuaranteedRef {
-                values.append($0.value)
-                node = $0.next
+
+            n._withUnsafeGuaranteedRef { ref in
+                
+                cache.setValue(ref.value, forKey: ref.key, cost: ref.cost)
+                node = ref.next
             }
         }
         
-        return values
+        return cache
     }
 }

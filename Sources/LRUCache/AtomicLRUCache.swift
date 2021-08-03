@@ -33,26 +33,11 @@ public final class AtomicLRUCache<Key, Value> where Key: Hashable {
         }
     }
     
-    public var maxAge: Time.Span {
-        get {
-            os_unfair_lock_lock(&unfair_lock)
-            defer { os_unfair_lock_unlock(&unfair_lock) }
-            
-            return cache.maxAge
-        }
-        set {
-            os_unfair_lock_lock(&unfair_lock)
-            defer { os_unfair_lock_unlock(&unfair_lock) }
-            
-            cache.maxAge = newValue
-        }
-    }
-    
     public var totalCost: Int {
         os_unfair_lock_lock(&unfair_lock)
         defer { os_unfair_lock_unlock(&unfair_lock) }
         
-        return cache.totalCost
+        return cache._totalCost
     }
     
     public func setValue(_ value: Value, forKey key: Key, cost: Int = 1) {
@@ -88,13 +73,6 @@ public final class AtomicLRUCache<Key, Value> where Key: Hashable {
         defer { os_unfair_lock_unlock(&unfair_lock) }
         
         cache.trimToCostLimit()
-    }
-    
-    public func trimToMaxAge() {
-        os_unfair_lock_lock(&unfair_lock)
-        defer { os_unfair_lock_unlock(&unfair_lock) }
-        
-        cache.trimToMaxAge()
     }
     
     public func contains(_ key: Key) -> Bool {

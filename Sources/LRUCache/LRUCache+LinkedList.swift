@@ -1,13 +1,19 @@
 extension LRUCache {
     
+    @usableFromInline
     final class LinkedList {
-        
+    
+        @usableFromInline
         var first: Unmanaged<Node>?
+        @usableFromInline
         var last: Unmanaged<Node>?
 
+        @inlinable
         init() {
         }
         
+        @inlinable
+        @inline(__always)
         func append(_ node: Unmanaged<Node>) {
             if let last = last {
                 last._withUnsafeGuaranteedRef {
@@ -25,6 +31,8 @@ extension LRUCache {
             }
         }
         
+        @inlinable
+        @inline(__always)
         func moveToLast(_ node: Unmanaged<Node>) {
             let firstPoint = first!.toOpaque()
             let lastPoint = last!.toOpaque()
@@ -61,6 +69,8 @@ extension LRUCache {
         }
         
         /// Assume the first exists.
+        @inlinable
+        @inline(__always)
         func remove(_ node: Unmanaged<Node>) {
             let firstPoint = first!.toOpaque()
             let lastPoint = last!.toOpaque()
@@ -95,6 +105,8 @@ extension LRUCache {
         }
         
         /// Assume the first exists.
+        @inlinable
+        @inline(__always)
         @discardableResult
         func removeFirst() -> Unmanaged<Node> {
             if first!.toOpaque() == last!.toOpaque() {
@@ -117,6 +129,8 @@ extension LRUCache {
             return first!
         }
         
+        @inlinable
+        @inline(__always)
         func removeAll() {
             first = nil
             last = nil
@@ -127,25 +141,28 @@ extension LRUCache {
 
 extension LRUCache.LinkedList {
     
+    @usableFromInline
     final class Node {
         
+        @usableFromInline
         var previous: Unmanaged<Node>?
+        @usableFromInline
         var next: Unmanaged<Node>?
         
+        @usableFromInline
         var key: Key
+        @usableFromInline
         var value: Value
         
+        @usableFromInline
         var cost: Int
         
-        var time: Time
-        
-        init(key: Key, value: Value, cost: Int, time: Time) {
+        @inlinable
+        init(key: Key, value: Value, cost: Int) {
             self.key = key
             self.value = value
             
             self.cost = cost
-            
-            self.time = time
         }
     }
 }
