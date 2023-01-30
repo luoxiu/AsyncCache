@@ -3,6 +3,8 @@
 A description of this package.
 
 ```
+# 63e5ce1e689082ecf09683f2a5ccc7739e84f844
+
 name                  time             std        iterations
 ------------------------------------------------------------
 add LRUCache            1215010.000 ns ±  32.84 %        947

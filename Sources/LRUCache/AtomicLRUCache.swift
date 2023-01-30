@@ -2,10 +2,13 @@ import Foundation
 
 public final class AtomicLRUCache<Key, Value> where Key: Hashable {
     
-    private var unfair_lock = os_unfair_lock_s()
+    @usableFromInline
+    var unfair_lock = os_unfair_lock_s()
     
-    private var cache: LRUCache<Key, Value>
+    @usableFromInline
+    var cache: LRUCache<Key, Value>
     
+    @inlinable
     public init(
         minimumCapacity: Int = 2 ^ 5,
         costLimit: Int = .max,
@@ -17,7 +20,7 @@ public final class AtomicLRUCache<Key, Value> where Key: Hashable {
     }
     
     // MARK: Config
-    
+    @inlinable
     public var costLimit: Int {
         get {
             os_unfair_lock_lock(&unfair_lock)
@@ -33,6 +36,7 @@ public final class AtomicLRUCache<Key, Value> where Key: Hashable {
         }
     }
     
+    @inlinable
     public var totalCost: Int {
         os_unfair_lock_lock(&unfair_lock)
         defer { os_unfair_lock_unlock(&unfair_lock) }
@@ -40,6 +44,7 @@ public final class AtomicLRUCache<Key, Value> where Key: Hashable {
         return cache._totalCost
     }
     
+    @inlinable
     public func setValue(_ value: Value, forKey key: Key, cost: Int = 1) {
         os_unfair_lock_lock(&unfair_lock)
         defer { os_unfair_lock_unlock(&unfair_lock) }
@@ -47,6 +52,7 @@ public final class AtomicLRUCache<Key, Value> where Key: Hashable {
         cache.setValue(value, forKey: key, cost: cost)
     }
     
+    @inlinable
     public func value(forKey key: Key) -> Value? {
         os_unfair_lock_lock(&unfair_lock)
         defer { os_unfair_lock_unlock(&unfair_lock) }
@@ -54,6 +60,7 @@ public final class AtomicLRUCache<Key, Value> where Key: Hashable {
         return cache.value(forKey: key)
     }
     
+    @inlinable
     public func removeValue(forKey key: Key) -> Value? {
         os_unfair_lock_lock(&unfair_lock)
         defer { os_unfair_lock_unlock(&unfair_lock) }
@@ -61,6 +68,7 @@ public final class AtomicLRUCache<Key, Value> where Key: Hashable {
         return cache.removeValue(forKey: key)
     }
     
+    @inlinable
     public func removeAll(keepingCapacity: Bool = false) {
         os_unfair_lock_lock(&unfair_lock)
         defer { os_unfair_lock_unlock(&unfair_lock) }
@@ -68,6 +76,7 @@ public final class AtomicLRUCache<Key, Value> where Key: Hashable {
         cache.removeAll(keepingCapacity: keepingCapacity)
     }
     
+    @inlinable
     public func trimToCostLimit() {
         os_unfair_lock_lock(&unfair_lock)
         defer { os_unfair_lock_unlock(&unfair_lock) }
@@ -75,6 +84,7 @@ public final class AtomicLRUCache<Key, Value> where Key: Hashable {
         cache.trimToCostLimit()
     }
     
+    @inlinable
     public func contains(_ key: Key) -> Bool {
         os_unfair_lock_lock(&unfair_lock)
         defer { os_unfair_lock_unlock(&unfair_lock) }
@@ -82,6 +92,7 @@ public final class AtomicLRUCache<Key, Value> where Key: Hashable {
         return cache.contains(key)
     }
     
+    @inlinable
     public var count: Int {
         os_unfair_lock_lock(&unfair_lock)
         defer { os_unfair_lock_unlock(&unfair_lock) }
